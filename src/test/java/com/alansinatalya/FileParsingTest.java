@@ -14,62 +14,55 @@ import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
-import static org.junit.jupiter.api.Assertions.assertArrayEquals;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class FileParsingTest {
     private final ClassLoader cl = FileParsingTest.class.getClassLoader();
 
     @Test
-    void zipParsingTest() throws Exception {
-        try (
-                InputStream resource = cl.getResourceAsStream("test.zip");
-                ZipInputStream zis = new ZipInputStream(resource)
-        ) {
+    void zipParsingPdfTest() throws Exception {
+        try (InputStream is = cl.getResourceAsStream("test.zip");
+             ZipInputStream zis = new ZipInputStream(is)) {
             ZipEntry entry;
             while ((entry = zis.getNextEntry()) != null) {
                 if (entry.getName().contains("attention.pdf")) {
                     PDF pdf = new PDF(zis);
-                    assertEquals("All her hard work paid off and she passed the exam. She is happy", pdf.text.trim());
-                } else if (entry.getName().contains("bug.csv")) {
-                    CSVReader csvContent = new CSVReader(new InputStreamReader(zis));
-                    List<String[]> content = csvContent.readAll();
-                    assertArrayEquals(
-                            new String[]{"severity", "major"}, content.get(0)
-                    );
-                    assertArrayEquals(
-                            new String[]{"priority", "minor"}, content.get(1)
-                    );
-                } else if (entry.getName().contains("cart.xls")) {
+                    assertThat(pdf.text.trim()).isEqualTo("All her hard work paid off and she passed the exam. She is happy");
+                }
+            }
+        }
+    }
+
+    @Test
+    void zipParsingCsvTest() throws Exception {
+        try (InputStream is = cl.getResourceAsStream("test.zip");
+             ZipInputStream zis = new ZipInputStream(is)) {
+            ZipEntry entry;
+            while ((entry = zis.getNextEntry()) != null) {
+                if (entry.getName().contains("bug.csv")) {
+                    CSVReader csv = new CSVReader(new InputStreamReader(zis));
+                    List<String[]> content = csv.readAll();
+                    assertThat(content.get(0)).isEqualTo(new String[]{"severity", "major"});
+                    assertThat(content.get(1)).isEqualTo(new String[]{"priority", "minor"});
+                }
+            }
+        }
+    }
+
+    @Test
+    void zipParsingXlsTest() throws Exception {
+        try (InputStream is = cl.getResourceAsStream("test.zip");
+             ZipInputStream zis = new ZipInputStream(is)) {
+            ZipEntry entry;
+            while ((entry = zis.getNextEntry()) != null) {
+                if (entry.getName().contains("cart.xls")) {
                     XLS xls = new XLS(zis);
-                    assertEquals(
-                            "fruit",
-                            xls.excel.getSheet("cart1")
-                                    .getRow(0)
-                                    .getCell(0)
-                                    .getStringCellValue()
-                    );
-                    assertEquals(
-                            "orange",
-                            xls.excel.getSheet("cart1")
-                                    .getRow(0)
-                                    .getCell(1)
-                                    .getStringCellValue()
-                    );
-                    assertEquals(
-                            "vegetable",
-                            xls.excel.getSheet("cart1")
-                                    .getRow(1)
-                                    .getCell(0)
-                                    .getStringCellValue()
-                    );
-                    assertEquals(
-                            "cucumber",
-                            xls.excel.getSheet("cart1")
-                                    .getRow(1)
-                                    .getCell(1)
-                                    .getStringCellValue()
-                    );
+                    assertThat(xls.excel.getSheet("cart1").getRow(0).getCell(0).getStringCellValue()).isEqualTo("fruit");
+                    assertThat(xls.excel.getSheet("cart1").getRow(0).getCell(1).getStringCellValue()).isEqualTo("orange");
+                    assertThat(xls.excel.getSheet("cart1").getRow(1).getCell(0).getStringCellValue()).isEqualTo("vegetable");
+                    assertThat(xls.excel.getSheet("cart1").getRow(1).getCell(1).getStringCellValue()).isEqualTo("cucumber");
+
+
                 }
             }
         }
@@ -81,11 +74,10 @@ public class FileParsingTest {
              Reader reader = new InputStreamReader(is)) {
             ObjectMapper objectMapper = new ObjectMapper();
             Pet pet = objectMapper.readValue(reader, Pet.class);
-
-            assertEquals("cat", pet.type);
-            assertEquals("zosya", pet.name);
-            assertEquals(1, pet.age);
-            assertArrayEquals(new String[]{"meow", "purr", "growl"}, pet.sound.toArray());
+            assertThat(pet.getType()).isEqualTo("cat");
+            assertThat(pet.getName()).isEqualTo("zosya");
+            assertThat(pet.getAge()).isEqualTo(1);
+            assertThat(pet.getSound().toArray()).isEqualTo(new String[]{"meow", "purr", "growl"});
         }
     }
 }
