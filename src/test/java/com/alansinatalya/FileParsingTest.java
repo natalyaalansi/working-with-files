@@ -24,12 +24,16 @@ public class FileParsingTest {
         try (InputStream is = cl.getResourceAsStream("test.zip");
              ZipInputStream zis = new ZipInputStream(is)) {
             ZipEntry entry;
+            boolean fileExists = false;
             while ((entry = zis.getNextEntry()) != null) {
                 if (entry.getName().contains("attention.pdf")) {
                     PDF pdf = new PDF(zis);
                     assertThat(pdf.text.trim()).isEqualTo("All her hard work paid off and she passed the exam. She is happy");
+                    fileExists = true;
+                    break;
                 }
             }
+            assertThat(fileExists).withFailMessage("PDF file does not exist in the archive").isEqualTo(true);
         }
     }
 
@@ -38,14 +42,18 @@ public class FileParsingTest {
         try (InputStream is = cl.getResourceAsStream("test.zip");
              ZipInputStream zis = new ZipInputStream(is)) {
             ZipEntry entry;
+            boolean fileExists = false;
             while ((entry = zis.getNextEntry()) != null) {
                 if (entry.getName().contains("bug.csv")) {
                     CSVReader csv = new CSVReader(new InputStreamReader(zis));
                     List<String[]> content = csv.readAll();
                     assertThat(content.get(0)).isEqualTo(new String[]{"severity", "major"});
                     assertThat(content.get(1)).isEqualTo(new String[]{"priority", "minor"});
+                    fileExists = true;
+                    break;
                 }
             }
+            assertThat(fileExists).withFailMessage("CSV file does not exist in the archive").isEqualTo(true);
         }
     }
 
@@ -54,6 +62,7 @@ public class FileParsingTest {
         try (InputStream is = cl.getResourceAsStream("test.zip");
              ZipInputStream zis = new ZipInputStream(is)) {
             ZipEntry entry;
+            boolean fileExists = false;
             while ((entry = zis.getNextEntry()) != null) {
                 if (entry.getName().contains("cart.xls")) {
                     XLS xls = new XLS(zis);
@@ -61,10 +70,11 @@ public class FileParsingTest {
                     assertThat(xls.excel.getSheet("cart1").getRow(0).getCell(1).getStringCellValue()).isEqualTo("orange");
                     assertThat(xls.excel.getSheet("cart1").getRow(1).getCell(0).getStringCellValue()).isEqualTo("vegetable");
                     assertThat(xls.excel.getSheet("cart1").getRow(1).getCell(1).getStringCellValue()).isEqualTo("cucumber");
-
-
+                    fileExists = true;
+                    break;
                 }
             }
+            assertThat(fileExists).withFailMessage("XLS file does not exist in the archive").isEqualTo(true);
         }
     }
 
